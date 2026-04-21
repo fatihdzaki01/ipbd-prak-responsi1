@@ -1,9 +1,5 @@
 # 📰 Wired Articles Scraper & ETL Pipeline
 
-Pipeline lengkap untuk scraping artikel dari **Wired.com**, menyajikannya lewat REST API, dan memuatnya ke database PostgreSQL menggunakan orkestrasi Prefect.
-
----
-
 ## 📋 Daftar Isi
 
 - [Penjelasan Program](#-penjelasan-program)
