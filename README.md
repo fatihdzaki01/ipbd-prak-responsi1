@@ -39,7 +39,8 @@ Proyek ini terdiri dari **4 file utama** dengan peran yang berbeda-beda:
 
 **Output:**
 ```
-wired_articles.json dan  wired_articles.csv
+wired_articles.json  ← data terstruktur dengan session_id & timestamp
+wired_articles.csv   ← data tabular siap analisis
 ```
 
 ### `api.py` — REST API dengan FastAPI
@@ -118,6 +119,8 @@ CREATE TABLE wired_articles (
 );
 ```
 
+---
+
 ### `docker-compose.yaml` — Infrastruktur Database
 
 Menjalankan PostgreSQL versi 15 sebagai container Docker dengan konfigurasi:
@@ -146,16 +149,7 @@ Program dijalankan secara berurutan lewat 4 file berikut:
 
 ---
 
-**Ringkasan alur:**
-
-1. **PostgreSQL** dinyalakan lewat Docker sebagai tempat penyimpanan akhir data
-2. **`scrapper.py`** membuka browser secara otomatis, mengunjungi Wired.com, dan mengumpulkan data artikel → disimpan ke file JSON dan CSV
-3. **`api.py`** membaca file JSON tersebut dan menyajikannya sebagai REST API lokal
-4. **`flow.py`** (Prefect) mengorkestrasi pipeline: fetch data dari API → transformasi/cleaning → load ke database
-
----
-
-## 🚀 Cara Menjalankan Program
+## Cara Menjalankan Program
 
 ### Prasyarat
 
@@ -292,30 +286,6 @@ docker compose down
 **4. Distribusi Kategori**
 - Berapa banyak artikel per kategori (Security, Science, Business, Culture, Gear)?
 
-### Contoh Query Analisis di PostgreSQL
-
-```sql
--- Top 10 author paling produktif
-SELECT author, COUNT(*) AS jumlah_artikel
-FROM wired_articles
-WHERE author != ''
-GROUP BY author
-ORDER BY jumlah_artikel DESC
-LIMIT 10;
-
--- Jumlah artikel per hari
-SELECT DATE(scraped_at) AS tanggal, COUNT(*) AS jumlah
-FROM wired_articles
-GROUP BY tanggal
-ORDER BY tanggal DESC;
-
--- Artikel tanpa description (data quality check)
-SELECT COUNT(*) AS artikel_tanpa_deskripsi
-FROM wired_articles
-WHERE description = '' OR description IS NULL;
-
----
-
 ## 📁 Struktur File
 
 ```
@@ -329,4 +299,3 @@ responsi-uts-infra/
 ├── wired_articles.json  # Output scraping (format JSON)
 └── wired_articles.csv   # Output scraping (format CSV)
 ```
-
