@@ -118,8 +118,6 @@ CREATE TABLE wired_articles (
 );
 ```
 
----
-
 ### `docker-compose.yaml` — Infrastruktur Database
 
 Menjalankan PostgreSQL versi 15 sebagai container Docker dengan konfigurasi:
@@ -137,61 +135,16 @@ Data disimpan di volume persisten `postgres_data` sehingga tidak hilang saat con
 
 ## 🔄 Alur Kerja
 
-Berikut alur kerja keseluruhan program dari awal hingga data masuk ke database:
+Program dijalankan secara berurutan lewat 4 file berikut:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        TAHAP 0: INFRASTRUKTUR                   │
-│              docker-compose.yaml → PostgreSQL berjalan          │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        TAHAP 1: SCRAPING                        │
-│                         scrapper.py                             │
-│                                                                 │
-│  Wired.com (5 kategori)                                         │
-│       │                                                         │
-│       ├─ Kumpulkan 100+ link artikel unik                       │
-│       │                                                         │
-│       └─ Untuk setiap artikel:                                  │
-│              ├─ Ambil title (h1)                                │
-│              ├─ Ambil description (multi-fallback)              │
-│              └─ Ambil author (multi-fallback)                   │
-│                                                                 │
-│  Output: wired_articles.json + wired_articles.csv               │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        TAHAP 2: API SERVER                      │
-│                           api.py                                │
-│                                                                 │
-│  Membaca wired_articles.json                                    │
-│  Menyajikan via endpoint GET /articles                          │
-│  Berjalan di http://localhost:8000                              │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        TAHAP 3: ETL PIPELINE                    │
-│                           flow.py                               │
-│                                                                 │
-│  [FETCH]     → Hit GET /articles dari FastAPI                   │
-│       │                                                         │
-│  [TRANSFORM] → Bersihkan author, validasi timestamp             │
-│       │                                                         │
-│  [LOAD]      → INSERT ke PostgreSQL (skip duplikat)             │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        HASIL AKHIR                              │
-│                                                                 │
-│  Tabel wired_articles di PostgreSQL                             │
-│  siap untuk analisis / visualisasi / reporting                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Urutan | File | Yang Dilakukan |
+|:---:|---|---|
+| 1 | `docker-compose.yaml` | Menyalakan database PostgreSQL sebagai tempat penyimpanan akhir |
+| 2 | `scrapper.py` | Membuka browser secara otomatis, scraping artikel dari Wired.com, menyimpan hasilnya ke `wired_articles.json` dan `wired_articles.csv` |
+| 3 | `api.py` | Membaca file JSON hasil scraping dan menyajikannya sebagai REST API di `localhost:8000` |
+| 4 | `flow.py` | Mengambil data dari API, membersihkan data, lalu memasukkannya ke database PostgreSQL |
+
+---
 
 **Ringkasan alur:**
 
