@@ -201,8 +201,8 @@ Buka **terminal baru** (jangan tutup yang sebelumnya):
 
 ```bash
 source .venv/bin/activate
-
 uvicorn api:app --reload --port 8000
+uv run prefect server start
 ```
 
 Verifikasi API berjalan dengan membuka browser ke:
