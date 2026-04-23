@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-# APP INIT
+# APP init
 app = FastAPI(
     title="Wired Articles API",
     description="API untuk menyajikan data artikel hasil scraping dari Wired.com",
@@ -20,7 +20,7 @@ app = FastAPI(
 JSON_PATH = os.path.join(os.path.dirname(__file__), "wired_articles.json")
 
 
-# SCHEMA
+# Schema
 class Article(BaseModel):
     title: str
     url: str
@@ -37,7 +37,7 @@ class ArticlesResponse(BaseModel):
     articles: List[Article]
 
 
-# HELPER: LOAD JSON
+# helper : load json
 def load_articles() -> dict:
     # Baca file JSON hasil scraping
     if not os.path.exists(JSON_PATH):
@@ -50,7 +50,7 @@ def load_articles() -> dict:
     return data
 
 
-# ENDPOINTS
+# Endpoints
 @app.get("/", summary="Health Check")
 def root():
     """Health check endpoint."""

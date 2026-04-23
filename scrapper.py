@@ -10,9 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-# =========================
-# SETUP DRIVER
-# =========================
+# Setup driver
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")
 options.add_argument("--no-sandbox")
@@ -29,19 +27,9 @@ driver = webdriver.Chrome(
 )
 
 
-# =========================
-# HELPER: AMBIL DESCRIPTION DENGAN MULTI-FALLBACK
-# =========================
+
+# Helper: AMbil DEscription
 def get_description(driver):
-    """
-    Coba ambil description dari beberapa sumber secara berurutan.
-    Priority:
-      1. <meta name="description"> — paling reliable, hampir selalu ada
-      2. <meta property="og:description"> — Open Graph fallback
-      3. <h2> tag — subtitle artikel
-      4. Paragraf pertama artikel
-      5. String kosong jika semua gagal
-    """
 
     # Priority 1: meta name="description"
     try:
@@ -84,17 +72,10 @@ def get_description(driver):
     return ""
 
 
-# =========================
-# HELPER: AMBIL AUTHOR
-# =========================
+# Helper: ambil author
 def get_author(driver):
-    """
-    Ambil nama author. Dibiarkan mengandung 'By' agar sesuai
-    instruksi tugas (pembersihan dilakukan di tahap DAG/transform).
-    Fallback ke berbagai selector jika satu gagal.
-    """
 
-    # Priority 1: Link /author/ — paling stabil
+    # Priority 1: Link /author/
     try:
         author = driver.find_element(By.XPATH, "//a[contains(@href, '/author/')]").text
         if author and author.strip():
@@ -123,10 +104,7 @@ def get_author(driver):
     return ""
 
 
-# =========================
-# AMBIL SEMUA LINK ARTIKEL DARI BEBERAPA KATEGORI
-# =========================
-# Scrape dari beberapa kategori supaya mudah dapat 50+ artikel
+# Scrape dari beberapa kategori
 CATEGORY_URLS = [
     "https://www.wired.com/category/security/",
     "https://www.wired.com/category/science/",
@@ -164,11 +142,10 @@ for cat_url in CATEGORY_URLS:
 
 print(f"\n✅ Total unique article links found: {len(all_urls)}")
 
-# =========================
-# SCRAPE DETAIL SETIAP ARTIKEL
-# =========================
+
+# scrape detail artikel
 articles_data = []
-TARGET = 75  # Ambil 75 artikel untuk jaga-jaga (tugas minta min 50)
+TARGET = 75  # Ambil 75 artikel
 
 print(f"\n🔍 Starting detail scrape for {min(TARGET, len(all_urls))} articles...\n")
 
@@ -180,16 +157,16 @@ for i, url in enumerate(all_urls[:TARGET], start=1):
             EC.presence_of_element_located((By.TAG_NAME, "h1"))
         )
 
-        # TITLE
+        # Title
         try:
             title = driver.find_element(By.TAG_NAME, "h1").text.strip()
         except:
             title = ""
 
-        # DESCRIPTION — pakai fungsi multi-fallback
+        # Description — pakai fungsi multi-fallback
         description = get_description(driver)
 
-        # AUTHOR — dibiarkan mengandung "By" (sesuai instruksi tugas)
+        # Author
         author = get_author(driver)
 
         articles_data.append(
@@ -217,9 +194,8 @@ for i, url in enumerate(all_urls[:TARGET], start=1):
 driver.quit()
 print(f"\n✅ Scraped {len(articles_data)} articles successfully")
 
-# =========================
-# SAVE JSON
-# =========================
+
+# save json
 session_id = f"wired_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
 output = {
@@ -234,9 +210,7 @@ with open("wired_articles.json", "w", encoding="utf-8") as f:
 
 print("💾 JSON saved → wired_articles.json")
 
-# =========================
-# SAVE CSV
-# =========================
+# Save CSV
 with open("wired_articles.csv", "w", newline="", encoding="utf-8") as csvfile:
     fieldnames = ["title", "url", "description", "author", "scraped_at", "source"]
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -244,11 +218,9 @@ with open("wired_articles.csv", "w", newline="", encoding="utf-8") as csvfile:
     for article in articles_data:
         writer.writerow(article)
 
-print("💾 CSV saved  → wired_articles.csv")
+print("CSV saved  → wired_articles.csv")
 
-# =========================
-# RINGKASAN
-# =========================
+# Ringkasan
 has_desc = sum(1 for a in articles_data if a["description"])
 has_auth = sum(1 for a in articles_data if a["author"])
 

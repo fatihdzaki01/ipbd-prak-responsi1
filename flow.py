@@ -1,8 +1,3 @@
-"""
-flow.py — Prefect pipeline: Fetch → Transform → Load to PostgreSQL
-Jalankan: python flow.py
-"""
-
 import re
 from datetime import datetime
 
@@ -10,9 +5,8 @@ import psycopg2
 import requests
 from prefect import flow, task
 
-# =========================
-# CONFIG
-# =========================
+
+# config
 API_URL = "http://localhost:8000/articles"
 
 DB_CONFIG = {
@@ -24,9 +18,7 @@ DB_CONFIG = {
 }
 
 
-# =========================
-# TASK 1: FETCH
-# =========================
+# Task 1: Fetch
 @task(name="Fetch Articles from API", retries=2, retry_delay_seconds=5)
 def fetch_articles() -> list[dict]:
     """Hit GET /articles ke FastAPI lokal."""
@@ -38,9 +30,7 @@ def fetch_articles() -> list[dict]:
     return articles
 
 
-# =========================
-# TASK 2: TRANSFORM
-# =========================
+# Task 2: Tsransform
 @task(name="Transform Articles")
 def transform_articles(articles: list[dict]) -> list[dict]:
     """
@@ -78,16 +68,9 @@ def transform_articles(articles: list[dict]) -> list[dict]:
     return cleaned
 
 
-# =========================
-# TASK 3: LOAD TO DB
-# =========================
+# Task 3: Load ke Database
 @task(name="Load to PostgreSQL")
 def load_to_db(articles: list[dict]) -> None:
-    """
-    Insert artikel ke tabel wired_articles.
-    Buat tabel dulu kalau belum ada.
-    ON CONFLICT (url) DO NOTHING → skip duplikat.
-    """
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
@@ -138,23 +121,15 @@ def load_to_db(articles: list[dict]) -> None:
     print(f"✅ Inserted: {inserted} | Skipped (duplikat): {skipped}")
 
 
-# =========================
-# FLOW UTAMA
-# =========================
+
+# Flow utama
 @flow(name="Wired Articles Pipeline")
 def wired_pipeline():
-    """
-    Pipeline utama:
-    fetch_articles → transform_articles → load_to_db
-    Data dipass langsung lewat return value antar task.
-    """
     raw = fetch_articles()
     cleaned = transform_articles(raw)
     load_to_db(cleaned)
 
 
-# =========================
-# ENTRY POINT
-# =========================
+# Entry Point
 if __name__ == "__main__":
     wired_pipeline()
